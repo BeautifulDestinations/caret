@@ -16,13 +16,22 @@ data Caret a b = Caret
 
 ols :: Caret (Vector Double) Double
 ols = Caret t p where
-  t the_data = let a = fromRows $ map fst the_data
-                   b = col $ map snd the_data
-               in head $ toColumns $ linearSolveSVD a b
+  t the_data = let x = fromRows $ map fst the_data
+                   y = col $ map snd the_data
+               in head $ toColumns $ inv (tr' x <> x) <> tr' x <> y
   p betas x = betas `dot` x
 
---ridge :: Double -> Caret (Vector Double) Double
+ridge :: Double -> Caret (Vector Double) Double
+ridge alpha = Caret t p where
+  t the_data = let x = fromRows $ map fst the_data
+                   y = col $ map snd the_data
+                   npars = VS.length $ fst $ head the_data
+                   gamma = scale alpha $ ident npars
+               in head $ toColumns $ inv (tr' x <> x + tr' gamma <> gamma) <> tr' x <> y
+  p betas x = betas `dot` x
 
+--http://www.stat.cmu.edu/~cshalizi/350/lectures/26/lecture-26.pdf
+--https://hackage.haskell.org/package/regress-0.1.1/docs/src/Numeric-Regression-Logistic.html#regress
 --logistic :: Caret (Vector Double) Bool
 
 

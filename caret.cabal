@@ -16,9 +16,11 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      lib
   exposed-modules:     Caret
+                     , Caret.GenData
   build-depends:       base >= 4.7 && < 5
                      , vector
                      , hmatrix
+                     , random-fu
   default-language:    Haskell2010
 
 test-suite simple-test

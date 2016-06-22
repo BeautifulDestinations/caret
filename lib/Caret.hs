@@ -40,3 +40,10 @@ newtype OlsParams = OlsParams { unOlsParams :: Vector Double }
 class CaretC a b h | a -> b, a -> h where
   trainC :: h -> [(Vector Double, b)] -> a
   predictC :: a -> Vector Double -> b
+
+prepare :: [a->Double] -> (a -> b) -> a -> (Vector Double, b)
+prepare preds out x = (VS.fromList $ map ($x) preds , out x)
+
+ind :: Bool -> Double
+ind True = 1
+ind False = 1

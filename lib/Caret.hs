@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FunctionalDependencies, TypeFamilies #-}
 
 module Caret where
 
@@ -7,7 +7,6 @@ import Data.Vector.Storable (Vector)
 
 import Numeric.LinearAlgebra
 
-type Vec = Vector Double
 
 data Caret a b = Caret
   { train :: [(Vector Double, b)] -> a
@@ -29,6 +28,11 @@ ridge alpha = Caret t p where
                    gamma = scale alpha $ ident npars
                in head $ toColumns $ inv (tr' x <> x + tr' gamma <> gamma) <> tr' x <> y
   p betas x = betas `dot` x
+
+logistic :: Caret (Vector Double) Bool
+logistic = Caret t p where
+  t the_data = undefined
+  p betas x = undefined
 
 --http://www.stat.cmu.edu/~cshalizi/350/lectures/26/lecture-26.pdf
 --https://hackage.haskell.org/package/regress-0.1.1/docs/src/Numeric-Regression-Logistic.html#regress

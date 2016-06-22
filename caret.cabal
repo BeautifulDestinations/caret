@@ -21,6 +21,7 @@ library
                      , vector
                      , hmatrix
                      , random-fu
+                     , regress
   default-language:    Haskell2010
 
 test-suite simple-test

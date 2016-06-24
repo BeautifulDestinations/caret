@@ -15,10 +15,10 @@ personDist :: RVar Person
 personDist = do
   is_male <- bernoulli (0.5::Double)
   height <- if is_male
-              then normal 180 15
+              then normal 185 15
               else normal 165 15
   weight <- normal (height / 2.5) 10
-  heart_attack <- bernoulli $ 0.2 + 0.6 * sigmoid (weight / height - 2.5)
+  heart_attack <- bernoulli $ sigmoid (100* (weight / height - 1/2.5))
   return $ Person height weight is_male heart_attack
 
 genPersons :: Int -> IO [Person]

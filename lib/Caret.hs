@@ -52,30 +52,6 @@ logistic = Caret t p where
   getInit the_data = VS.map (const 0.1) $ fst $ head the_data
   getBox the_data = VS.map (const 0.2) $ fst $ head the_data
 
-checkGrad :: (Vector Double -> Double)
-          -> (Vector Double -> Vector Double)
-          -> Vector Double
-          -> (Vector Double, Vector Double)
-checkGrad f g p =
-  let gcalc = fdgrad f p
-  in (gcalc, g p)
-
-fdgrad :: (VS.Vector Double -> Double) -> VS.Vector Double -> VS.Vector Double
-fdgrad f xv = VS.imap g xv where
-  g ix x = let h = if abs x > 1e-7
-                      then abs (x) * 2e-5
-                      else 1e-10
-               plus = xv VS.// [(ix, x+h)]
-               minus = xv VS.// [(ix, x-h)]
-           in (f plus - f minus)/(2*h)
-
-
-newtype OlsParams = OlsParams { unOlsParams :: Vector Double }
-
-class CaretC a b h | a -> b, a -> h where
-  trainC :: h -> [(Vector Double, b)] -> a
-  predictC :: a -> Vector Double -> b
-
 prepare :: [a->Double] -> (a -> b) -> a -> (Vector Double, b)
 prepare preds out x = (predictors preds x , out x)
 

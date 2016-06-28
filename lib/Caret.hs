@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies, TypeFamilies #-}
+{-# LANGUAGE FunctionalDependencies, TypeFamilies, ViewPatterns #-}
 
 module Caret where
 
@@ -8,6 +8,7 @@ import Data.Vector.Storable (Vector)
 import Numeric.LinearAlgebra
 import Caret.BFGS
 import Numeric.GSL.Minimization
+import Data.List (partition)
 
 type family Approx a
 
@@ -69,6 +70,26 @@ prepare preds out x = (predictors preds x , out x)
 predictors :: [a->Double] -> a -> Vector Double
 predictors preds x = VS.fromList $ map ($x) preds
 
+polyExpand :: Int -> (Double, Double) -> (Vector Double, Double)
+polyExpand ncoeffs (x,y) = (VS.fromList lst,y) where
+  lst = map f [0..ncoeffs-1]
+  f pw = x^pw
+
 ind :: Bool -> Double
 ind True = 1
 ind False = 0
+
+crossValidate :: (Approx b -> b -> Double) -> Int -> Caret a b -> [(Vector Double, b)] -> Double
+crossValidate distMetric leaveNth caret theData  = totalDistance where
+  (map fst -> testSet,
+   map fst -> trainSet)
+      = partition ((==0) . (`mod` leaveNth) . snd) $ zip theData [0..]
+  fit = train caret trainSet
+  dists = flip map testSet $ \(xs, ytrue) ->
+    let yhat = predict caret fit xs
+    in distMetric yhat ytrue
+  totalDistance = sum dists
+
+crossValidateRegression :: Int -> Caret a Double -> [(Vector Double, Double)] -> Double
+crossValidateRegression = crossValidate sumSqr where
+  sumSqr x y = let d = x-y in d*d

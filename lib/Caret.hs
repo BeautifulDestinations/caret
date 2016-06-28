@@ -9,12 +9,12 @@ import Numeric.LinearAlgebra
 import Caret.BFGS
 import Numeric.GSL.Minimization
 import Data.List (partition)
+import Debug.Trace
 
 type family Approx a
 
 type instance Approx Bool = Double
 type instance Approx Double = Double
-
 
 data Caret a b = Caret
   { train :: [(Vector Double, b)] -> a
@@ -40,29 +40,17 @@ ridge alpha = Caret t p where
 --http://www.stat.cmu.edu/~cshalizi/350/lectures/26/lecture-26.pdf
 logistic :: Caret (Vector Double) Bool
 logistic = Caret t p where
-  t the_data = case doMin1 the_data of
-                 Left err -> doMinNM the_data
-                 Right (p,_) -> p
+  t the_data =  doMinNM the_data
   p beta x = 1/(1+exp (negate $ beta `dot` x))
-  doMinNM the_data = fst $ minimizeV NMSimplex 1e-2 200 (getBox the_data) (logLike the_data) (getInit the_data)
-  doMin1 the_data = bfgs (logLike the_data) (grad the_data) (getInit the_data)
+  doMinNM the_data =
+     fst $ minimizeV NMSimplex 1e-2 200 (getBox the_data) (logLike the_data) (getInit the_data)
   logLike1 beta (x, y) = let dp = beta `dot` x
                              pval = p beta x
                          in ind y * log pval + (1-ind y) * log 1 - pval
-                             ---log 1 + exp dp + ind y * dp
+                            --log 1 + exp dp + ind y * dp
   logLike the_data beta =  negate $ sum $ map (logLike1 beta) the_data
-  grad1 beta (x,y)  = VS.map (\xij -> (ind y - recip (1+exp(negate $ beta `dot`x))) * xij) x
-  grad the_data beta = VS.map negate $ foldl1 (VS.zipWith (+)) $ map (grad1 beta) the_data
   getInit the_data = VS.map (const 0.1) $ fst $ head the_data
   getBox the_data = VS.map (const 0.2) $ fst $ head the_data
-
-
-
-newtype OlsParams = OlsParams { unOlsParams :: Vector Double }
-
-class CaretC a b h | a -> b, a -> h where
-  trainC :: h -> [(Vector Double, b)] -> a
-  predictC :: a -> Vector Double -> b
 
 prepare :: [a->Double] -> (a -> b) -> a -> (Vector Double, b)
 prepare preds out x = (predictors preds x , out x)
